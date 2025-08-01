@@ -1,29 +1,33 @@
 ---
-name: Bug Report
-about: Report a problem that needs to be fixed.
-title: ''
-labels: bug, triage
+name: Bug report
+about: Create a report to help us improve
+title: '[BUG] '
+labels: bug
 assignees: ''
 
 ---
-<!-- PLEASE READ
-This form is for bug reports for the MCP server.
 
-For issues that are related to the Google Analytics APIs and not specific to
-this library, please check out the resources at
-https://developers.google.com/analytics/support.
+**Describe the bug**
+A clear and concise description of what the bug is.
 
-Please check existing issues to see if your bug has already been reported
-before creating a new issue. We encourage you to add any relevant information
-to the existing issue if one already exists.
--->
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Call tool '...' with parameters '...'
+2. See error
 
-**Describe the bug:**
+**Expected behavior**
+A clear and concise description of what you expected to happen.
 
-**Steps to Reproduce:**
+**Error logs**
+```
+Paste any error messages or logs here
+```
 
-**Expected behavior:**
+**Environment:**
+ - OS: [e.g. Ubuntu 22.04]
+ - Python version: [e.g. 3.11]
+ - MCP Server version: [e.g. 0.1.0]
+ - Deployment: [e.g. Cloud Run, Local]
 
-**Anything else we should know about your project / environment:**
-<!-- Insert any other context or screenshots about the bug here. -->
-
+**Additional context**
+Add any other context about the problem here.

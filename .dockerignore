@@ -1,0 +1,48 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+.nox/
+.tox/
+.venv/
+env/
+venv/
+ENV/
+
+# Development
+tests/
+noxfile.py
+*.log
+*.md
+!README.md
+.vscode/
+.idea/
+
+# Documentation
+docs/
+CONTRIBUTING.md
+LICENSE
+CODEOWNERS
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Cloud deployment files
+cloudbuild.yaml
+deploy.sh
+CLOUD_RUN_DEPLOYMENT_PLAN.md
+
+# IDE
+.DS_Store
+*.swp
+*.swo

@@ -1,184 +1,210 @@
-# Google Analytics MCP Server (Experimental)
+# Google Analytics MCP Server (Multi-Tenant)
 
-This repo contains the source code for running a local
-[MCP](https://modelcontextprotocol.io) server that interacts with APIs for
-[Google Analytics](https://support.google.com/analytics).
+A production-ready [MCP](https://modelcontextprotocol.io) server for Google Analytics with multi-tenant support. This repository serves as a template for creating MCP servers that can be deployed to Cloud Run and integrated with ADK (Agent Development Kit).
 
-## Tools :hammer_and_wrench:
+## Features
 
-The server uses the
-[Google Analytics Admin API](https://developers.google.com/analytics/devguides/config/admin/v1)
-and
-[Google Analytics Data API](https://developers.google.com/analytics/devguides/reporting/data/v1)
-to provide several
-[Tools](https://modelcontextprotocol.io/docs/concepts/tools) for use with LLMs.
+- ✅ **Multi-tenant support** - Each tenant provides their own credentials
+- ✅ **Cloud Run ready** - Dockerized and optimized for serverless deployment
+- ✅ **ADK compatible** - Works with Google's Agent Development Kit
+- ✅ **Secure by design** - No credential storage, complete tenant isolation
+- ✅ **Template structure** - Easy to adapt for other services
 
-### Retrieve account and property information :orange_circle:
+## Available Tools
 
-- `get_account_summaries`: Retrieves information about the user's Google
-  Analytics accounts and properties.
-- `get_property_details`: Returns details about a property.
-- `list_google_ads_links`: Returns a list of links to Google Ads accounts for
-  a property.
+### Standard Tools (Single-Tenant)
+- `get_account_summaries` - List Google Analytics accounts and properties
+- `get_property_details` - Get details about a specific property
+- `run_report` - Run analytics reports
+- `run_realtime_report` - Get real-time analytics data
 
-### Run core reports :orange_book:
+### Multi-Tenant Tools (Recommended)
+- `get_account_summaries_mt` - List accounts with tenant credentials
+- `get_property_details_mt` - Get property details with tenant credentials
+- `run_report_mt` - Run reports with tenant credentials
+- `run_realtime_report_mt` - Get real-time data with tenant credentials
 
-- `run_report`: Runs a Google Analytics report using the Data API.
-- `get_custom_dimensions_and_metrics`: Retrieves the custom dimensions and
-  metrics for a specific property.
+## Quick Start (Cloud Run Deployment)
 
-### Run realtime reports :hourglass_flowing_sand:
+### Prerequisites
+- Google Cloud Project with billing enabled
+- Docker installed (or use Cloud Build)
+- `gcloud` CLI installed and configured
 
-- `run_realtime_report`: Runs a Google Analytics realtime report using the
-  Data API.
+### Deploy to Cloud Run
 
-## Setup instructions
+```bash
+# Clone this repository
+git clone https://github.com/your-org/google-analytics-mcp.git
+cd google-analytics-mcp
 
-Setup involves the following steps:
-
-1.  Configure Python.
-1.  Configure credentials for Google Analytics.
-1.  Configure Gemini.
-
-### Configure Python :snake:
-
-[Install pipx](https://pipx.pypa.io/stable/#install-pipx).
-
-### Enable APIs in your project :white_check_mark:
-
-[Follow the instructions](https://support.google.com/googleapi/answer/6158841)
-to enable the following APIs in your Google Cloud project:
-
-* [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com)
-* [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)
-
-### Configure credentials :key:
-
-Configure your [Application Default Credentials
-(ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc).
-Make sure the credentials are for a user with access to your Google Analytics
-accounts or properties.
-
-Credentials must include the Google Analytics read-only scope:
-
-```
-https://www.googleapis.com/auth/analytics.readonly
+# Deploy using the provided script
+./quick-deploy.sh YOUR_PROJECT_ID us-central1
 ```
 
-Check out
-[Manage OAuth Clients](https://support.google.com/cloud/answer/15549257)
-for how to create an OAuth client.
+The deployment script will:
+1. Build a Docker container
+2. Push to Google Container Registry
+3. Deploy to Cloud Run
+4. Provide you with an HTTPS endpoint
 
-Here are some sample `gcloud` commands you might find useful:
+### Test Your Deployment
 
-- Set up ADC using user credentials and an OAuth desktop or web client after
-  downloading the client JSON to `YOUR_CLIENT_JSON_FILE`.
+```bash
+# Check health
+curl https://YOUR-SERVICE-URL/health
 
-  ```shell
-  gcloud auth application-default login \
-    --scopes https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/cloud-platform \
-    --client-id-file=YOUR_CLIENT_JSON_FILE
-  ```
+# View available tools
+curl https://YOUR-SERVICE-URL/
+```
 
-- Set up ADC using service account impersonation.
+## Multi-Tenant Usage
 
-  ```shell
-  gcloud auth application-default login \
-    --impersonate-service-account=SERVICE_ACCOUNT_EMAIL \
-    --scopes=https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/cloud-platform
-  ```
+### 1. Prepare Tenant Credentials
 
-### Configure Gemini
+Each tenant needs a Google Cloud service account with Google Analytics access:
 
-1.  Install [Gemini
-    CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/index.md)
-    or [Gemini Code
-    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+```bash
+# Create service account (one per tenant)
+gcloud iam service-accounts create tenant-analytics \
+    --display-name="Tenant Analytics Access"
 
-1.  Create or edit the file at `~/.gemini/settings.json`, adding your server
-    to the `mcpServers` list.
+# Download credentials
+gcloud iam service-accounts keys create tenant-sa.json \
+    --iam-account=tenant-analytics@PROJECT_ID.iam.gserviceaccount.com
 
-    ```json
-    {
-      "mcpServers": {
-        "analytics-mcp": {
-          "command": "pipx",
-          "args": [
-            "run",
-            "--spec",
-            "git+https://github.com/googleanalytics/google-analytics-mcp.git",
-            "google-analytics-mcp"
-          ]
-        }
-      }
-    }
-    ```
+# Base64 encode for use
+base64 < tenant-sa.json | tr -d '\n' > tenant-sa-encoded.txt
+```
 
-1.  **Optional:** Configure the `GOOGLE_APPLICATION_CREDENTIALS` environment
-    variable in Gemini settings. You may want to do this if you always want to
-    use a specific set of credentials, regardless of which Application Default
-    Credentials are selected in your current environment.
+### 2. Grant Google Analytics Access
 
-    In `~/.gemini/settings.json`, add a `GOOGLE_APPLICATION_CREDENTIALS`
-    attribute to the `env` object. Replace `PATH_TO_ADC_JSON` in the following
-    example with the full path to the ADC JSON file you always want to use for
-    your MCP server.
+1. Go to [Google Analytics](https://analytics.google.com)
+2. Navigate to Admin → Property → Property Access Management
+3. Add the service account email
+4. Grant "Viewer" role
 
-    ```json
-    {
-      "mcpServers": {
-        "analytics-mcp": {
-          "command": "pipx",
-          "args": [
-            "run",
-            "--spec",
-            "git+https://github.com/googleanalytics/google-analytics-mcp.git",
-            "google-analytics-mcp"
-          ],
-          "env": {
-            "GOOGLE_APPLICATION_CREDENTIALS": "PATH_TO_ADC_JSON"
-          }
-        }
-      }
-    }
-    ```
+### 3. Make API Calls
 
-## Try it out :lab_coat:
+```python
+import base64
+import json
+import requests
 
-Launch Gemini Code Assist or Gemini CLI and type `/mcp`. You should see
-`analytics-mcp` listed in the results.
+# Prepare credentials
+with open('tenant-sa.json', 'r') as f:
+    creds = base64.b64encode(f.read().encode()).decode()
 
-Here are some sample prompts to get you started:
+# Call multi-tenant tool
+response = requests.post('https://YOUR-SERVICE-URL/', json={
+    "jsonrpc": "2.0",
+    "method": "run_report_mt",
+    "params": {
+        "tenant_id": "customer-123",
+        "tenant_credentials": creds,
+        "property_id": "properties/123456789",
+        "date_ranges": [{"start_date": "7daysAgo", "end_date": "today"}],
+        "dimensions": ["country"],
+        "metrics": ["activeUsers"]
+    },
+    "id": 1
+})
 
-- Ask what the server can do:
+print(response.json())
+```
 
-  ```
-  what can the analytics-mcp server do?
-  ```
+## ADK Integration
 
-- Ask about a Google Analytics property
+```python
+from adk import Agent
+from adk.tools.mcp import MCPClient
 
-  ```
-  Give me details about my Google Analytics property with 'xyz' in the name
-  ```
+# Create agent with MCP integration
+agent = Agent(
+    name="analytics-assistant",
+    tools=[
+        MCPClient(
+            server_url="https://YOUR-SERVICE-URL",
+            name="analytics"
+        )
+    ]
+)
 
-- Prompt for analysis:
+# Use in your application
+async def handle_analytics_query(tenant_id: str, credentials: str, query: str):
+    response = await agent.run(
+        f"Using tenant_id '{tenant_id}' and the provided credentials, {query}"
+    )
+    return response
+```
 
-  ```
-  what are the most popular events in my Google Analytics property in the last 180 days?
-  ```
+## Local Development
 
-- Ask about signed-in users:
+### Setup
+```bash
+# Install dependencies
+pip install -e .
 
-  ```
-  were most of my users in the last 6 months logged in?
-  ```
+# Or use make
+make install
+```
 
-- Ask about property configuration:
+### Development Workflow
+```bash
+# Run tests
+make test
 
-  ```
-  what are the custom dimensions and custom metrics in my property?
-  ```
+# Run with coverage
+make test-coverage
+
+# Format and lint code
+make format
+make lint
+
+# Run all checks
+make check
+
+# Run server locally
+make run
+
+# Run with Docker
+make docker-run
+
+# Clean build artifacts
+make clean
+```
+
+### Docker Development
+```bash
+# Build and run with docker-compose
+docker-compose up --build
+
+# Run with specific environment
+docker-compose --env-file .env.local up
+```
+
+## Using as a Template
+
+This repository is designed to be a template for creating new MCP servers. 
+
+### Quick Start
+```bash
+# Initialize a new MCP server (e.g., for Salesforce)
+./init-new-mcp.sh salesforce
+
+# Or use make
+make init-new-service SERVICE=salesforce
+```
+
+### Template Features
+- 🚀 **Automated initialization** - `init-new-mcp.sh` script transforms the template
+- 🔧 **Development tools** - Makefile, Docker Compose, GitHub Actions
+- 📝 **Documentation templates** - Issue templates, PR template, CHANGELOG
+- 🧪 **Testing setup** - pytest configuration and test structure
+- 🌐 **CI/CD ready** - GitHub Actions workflows for testing and deployment
+- 🔒 **Security first** - .gitignore configured for credentials and keys
+
+See [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md) for detailed instructions.
 
 ## Contributing
 

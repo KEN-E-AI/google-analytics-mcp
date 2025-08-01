@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILDPLATFORM=linux/amd64
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DEBUG=${DEBUG:-false}
+      - ENABLE_MULTI_TENANT=${ENABLE_MULTI_TENANT:-true}
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
+    volumes:
+      # Mount service account key if using local auth
+      # - ${GOOGLE_APPLICATION_CREDENTIALS}:/app/credentials.json:ro
+      # Mount source code for development
+      - ./analytics_mcp:/app/analytics_mcp:ro
+      - ./simple_server.py:/app/simple_server.py:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Optional: Add a test client for development
+  test-client:
+    image: curlimages/curl:latest
+    depends_on:
+      - mcp-server
+    command: >
+      sh -c "
+        while true; do
+          curl -f http://mcp-server:8080/health || exit 1
+          sleep 60
+        done
+      "
+    profiles:
+      - testing

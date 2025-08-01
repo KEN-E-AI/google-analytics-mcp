@@ -1,0 +1,26 @@
+# Don't ignore Dockerfile anymore since we're using the corrected one
+
+# Ignore development files
+.git/
+.gitignore
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.nox/
+.venv/
+tests/
+noxfile.py
+*.log
+*.md
+!README.md
+.vscode/
+.idea/
+docs/
+CONTRIBUTING.md
+LICENSE
+CODEOWNERS
+cloudbuild.yaml
+deploy*.sh
+.dockerignore
+examples/

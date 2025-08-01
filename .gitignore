@@ -1,6 +1,17 @@
 *.py[cod]
 *.sw[op]
 
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Service account keys
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
 # C extensions
 *.so
 
