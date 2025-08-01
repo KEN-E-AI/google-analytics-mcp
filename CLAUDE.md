@@ -23,6 +23,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Server runs on http://localhost:8080
 - Test with: `curl http://localhost:8080/health`
 
+### Claude Desktop Compatibility
+
+**IMPORTANT**: This MCP server is NOT compatible with Claude Desktop. Here's why:
+
+1. **Transport Mismatch**: 
+   - Claude Desktop expects stdio-based MCP servers
+   - This server uses HTTP/JSON-RPC for Cloud Run deployment
+   - These transport mechanisms are fundamentally incompatible
+
+2. **Design Decision**:
+   - Optimized for production use with ADK (Agent Development Kit)
+   - Multi-tenant architecture requires HTTP for proper credential isolation
+   - Cloud Run deployment requires HTTP endpoints
+
+3. **Alternative Options**:
+   - Use ADK for production integration
+   - Test with curl commands directly
+   - Use the original single-tenant stdio version for local testing only
+
 ## Architecture Overview
 
 This is a multi-tenant MCP (Model Context Protocol) server for Google Analytics, deployed on Cloud Run.

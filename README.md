@@ -10,6 +10,8 @@ A production-ready [MCP](https://modelcontextprotocol.io) server for Google Anal
 - ✅ **Secure by design** - No credential storage, complete tenant isolation
 - ✅ **Template structure** - Easy to adapt for other services
 
+> **Note**: This server uses HTTP/JSON-RPC transport and is NOT compatible with Claude Desktop, which requires stdio-based MCP servers. It's designed for production use with ADK or direct HTTP integration.
+
 ## Available Tools
 
 ### Standard Tools (Single-Tenant)
